@@ -1,0 +1,24 @@
+<% application_name = params[:application_name] %>
+
+<h1>Apple Push Service Notifications scheduled for <%= application_name %></h1>
+
+<p class='sub'>Showing <%= start = params[:start].to_i %> to <%= start + 20 %> of <b><%=size = resque.aps_notification_count_for_application(application_name)%></b> notifications</p>
+
+<table class='jobs'>
+  <tr>
+    <th>Payload</th>
+  </tr>
+  <% notifications = resque.aps_notifications_for_application(application_name, start, 20) %>
+  <% notifications.each do |notification| %>
+    <tr>
+      <td class='args'><%=h notification['args'].inspect %></td>
+    </tr>
+  <% end %>
+  <% if notifications.empty? %>
+    <tr>
+      <td class='no-data' colspan='2'>There are no pending notifications scheduled for this application.</td>
+    </tr>
+  <% end %>
+</table>
+
+<%= partial :next_more, :start => start, :size => size %>

@@ -1,0 +1,25 @@
+<h1>Apple Push Notification Applications</h1>
+
+<p class='intro'>
+  The list below contains the APN application queues.
+</p>
+
+<p class='sub'>
+  Showing <%= start = params[:start].to_i %> to <%= start + 20 %> of <b><%=size = resque.aps_applications_count %></b> applications.
+</p>
+
+<table>
+  <tr>
+    <th></th>
+    <th>Application</th>
+    <th>Notification count</th>
+  </tr>
+  <% resque.aps_application_names(start, start+20).each do |application_name| %>
+    <tr>
+      <td><a href="<%= url "aps_applicatons/#{application_name}" %>"><%= application_name %></a></td>
+      <td><%= resque.aps_notification_count_for_application(application_name) %></td>
+    </tr>
+  <% end %>
+</table>
+
+<%= partial :next_more, :start => start, :size => size %>
