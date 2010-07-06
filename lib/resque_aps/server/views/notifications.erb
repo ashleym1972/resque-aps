@@ -11,7 +11,7 @@
   <% notifications = resque.aps_notifications_for_application(application_name, start, 20) %>
   <% notifications.each do |notification| %>
     <tr>
-      <td class='args'><%=h notification['args'].inspect %></td>
+      <td class='args'><%=h notification.to_s %></td>
     </tr>
   <% end %>
   <% if notifications.empty? %>

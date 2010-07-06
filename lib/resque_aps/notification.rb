@@ -1,6 +1,27 @@
 module ResqueAps
   class Notification
-    attr_accessor :application, :device_token, :payload
+    include Resque::Helpers
+    extend Resque::Helpers
+
+    attr_accessor :application_name, :device_token, :payload
+
+    def initialize(attributes)
+      attributes.each do |k, v|
+        respond_to?(:"#{k}=") ? send(:"#{k}=", v) : raise(ResqueAps::UnknownAttributeError, "unknown attribute: #{k}")
+      end
+    end
+        
+    def inspect
+      "#<#{self.class.name} #{application_name.inspect}, #{device_token.inspect}, #{payload.inspect}>"
+    end
+    
+    def to_s
+      "#{device_token.inspect}, #{payload.inspect}"
+    end
+    
+    def to_hash
+      {:application_name => application_name, :device_token => device_token, :payload => payload}
+    end
 
     # SSL Configuration
     #   open Keychain Access, and export the "Apple Development Push" certificate associated with your app in p12 format
