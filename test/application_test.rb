@@ -7,7 +7,8 @@ context "ResqueAps::Application" do
   end
 
   test "can create and close sockets" do
-    socket, ssl = ResqueAps::Application.create_sockets(File.dirname(__FILE__) + "/../test-dev.pem", nil, Resque.aps_gateway_host, Resque.aps_gateway_port)
+    cert = File.read(File.dirname(__FILE__) + "/../test-dev.pem")
+    socket, ssl = ResqueAps::Application.create_sockets(cert, nil, Resque.aps_gateway_host, Resque.aps_gateway_port)
     ResqueAps::Application.close_sockets(socket, ssl)
   end
 
@@ -34,7 +35,7 @@ context "ResqueAps::Application" do
         logger.debug "after_aps_write #{notification.inspect}"
       end
 
-      def failed_aps_write(notification)
+      def failed_aps_write(notification, exception)
         logger.debug "failed_aps_write #{notification.inspect}"
       end
 
