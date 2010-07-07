@@ -33,8 +33,8 @@ module ResqueAps
             socket.write(n.formatted)
             app.after_aps_write n
           rescue
-            logger.error application_exception($!) if logger
-            app.failed_aps_write n
+            logger.error Application.application_exception($!, name) if logger
+            app.failed_aps_write n, $!
           end
           count += 1
         end
@@ -45,9 +45,7 @@ module ResqueAps
     #
     # Create the TCP and SSL sockets for sending the notification
     #
-    def self.create_sockets(cert_file, passphrase, host, port)
-      cert = File.read(cert_file)
-
+    def self.create_sockets(cert, passphrase, host, port)
       ctx = OpenSSL::SSL::SSLContext.new
       ctx.key = OpenSSL::PKey::RSA.new(cert, passphrase)
       ctx.cert = OpenSSL::X509::Certificate.new(cert)
@@ -80,23 +78,32 @@ module ResqueAps
       end
     end
 
+    def self.application_exception(exception, name)
+      exc = Exception.new("#{exception} (#{name})")
+      exc.set_backtrace(exception.backtrace)
+      return exc
+    end
+    
     def initialize(attributes)
       attributes.each do |k, v|
         respond_to?(:"#{k}=") ? send(:"#{k}=", v) : raise(ResqueAps::UnknownAttributeError, "unknown attribute: #{k}")
       end
     end
     
-    def socket(&block)
+    def socket(cert = nil, certp = nil, host = nil, port = nil, &block)
       logger.debug("resque-aps: ssl_socket(#{name})") if logger
       exc = nil
 
-      socket, ssl_socket = Application.create_sockets(cert_file, cert_passwd, Resque.aps_gateway_host, Resque.aps_gateway_port)
+      socket, ssl_socket = Application.create_sockets(cert || File.read(cert_file),
+                                                      certp || cert_passwd,
+                                                      host || Resque.aps_gateway_host,
+                                                      port || Resque.aps_gateway_port)
 
       begin
         ssl_socket.connect
         yield ssl_socket, self if block_given?
       rescue
-        exc = application_exception($!)
+        exc = Application.application_exception($!, name)
         if $! =~ /^SSL_connect .* certificate (expired|revoked)/
           notify_aps_admin exc
         end
@@ -108,12 +115,6 @@ module ResqueAps
       exc
     end
 
-    def application_exception(exception)
-      exc = Exception.new("#{exception} (#{name})")
-      exc.set_backtrace(exception.backtrace)
-      return exc
-    end
-    
     def to_hash
       {'name' => name, 'cert_file' => cert_file, 'cert_passwd' => cert_passwd}
     end
@@ -128,7 +129,7 @@ module ResqueAps
     def after_aps_write(notification)
     end
 
-    def failed_aps_write(notification)
+    def failed_aps_write(notification, exception)
     end
 
     def notify_aps_admin(exception)
