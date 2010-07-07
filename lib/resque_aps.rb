@@ -1,7 +1,8 @@
 require 'rubygems'
 require 'resque'
+require 'logger'
 require 'resque/server'
-require 'resque/aps_helper'
+require 'resque_aps/helper'
 require 'resque_aps/version'
 require 'resque_aps/server'
 require 'resque_aps/application'
@@ -9,6 +10,18 @@ require 'resque_aps/notification'
 
 module ResqueAps
 
+  def logger=(logger)
+    @logger = logger
+  end
+  
+  def logger
+    unless @logger
+      @logger = Logger.new(STDOUT)
+      @logger.level = Logger::WARN
+    end
+    @logger
+  end
+  
   def aps_gateway_host=(host)
     @aps_gateway_host = host
   end
@@ -54,65 +67,14 @@ module ResqueAps
   end
   
   def aps_queue_size_upper
-    @aps_queue_size_upper ||= 0
-  end
-  
-  def before_aps_write(&block)
-    block ? (@before_aps_write = block) : @before_aps_write
-  end
-
-  # Set a proc that will be called in the job process before the
-  # worker writes an aps notification. Passed the notification object.
-  def before_aps_write=(before_aps_write)
-    @before_aps_write = before_aps_write
-  end
-  
-  def after_aps_write(&block)
-    block ? (@after_aps_write = block) : @after_aps_write
-  end
-
-  # Set a proc that will be called in the job process after the
-  # worker writes an aps notification. Passed the notification object.
-  def after_aps_write=(after_aps_write)
-    @after_aps_write = after_aps_write
-  end
-  
-  def failed_aps_write(&block)
-    block ? (@after_aps_write = block) : @after_aps_write
-  end
-
-  # Set a proc that will be called in the job process if an exception
-  # is raised while writing the aps notification. Passed the notification object.
-  def failed_aps_write=(after_aps_write)
-    @after_aps_write = after_aps_write
-  end
-  
-  def notify_aps_admin(&block)
-    block ? (@notify_aps_admin = block) : @notify_aps_admin
-  end
-
-  # Set a proc that will be called in the job process if an
-  # expired or revoked certificate exception is raised. Passed the exception object.
-  def notify_aps_admin=(notify_aps_admin)
-    @notify_aps_admin = notify_aps_admin
-  end
-  
-  def aps_nil_notification_retry(&block)
-    block ? (@aps_nil_notification_retry = block) : @aps_nil_notification_retry
-  end
-
-  # Set a proc that will be called in the job process
-  # if the dequeue_aps call returns nil which will return a boolean
-  # which indicates if the job should retry the dequeue. This
-  # proc should include any sleep needed. Passed the count and start time.
-  def aps_nil_notification_retry=(aps_nil_notification_retry)
-    @aps_nil_notification_retry = aps_nil_notification_retry
+    @aps_queue_size_upper ||= 500
   end
   
   def enqueue_aps(application_name, notification)
     count = aps_notification_count_for_application(application_name)
     push(aps_application_queue_key(application_name), notification.to_hash)
     enqueue(ResqueAps::Application, application_name) if count <= aps_queue_size_lower || count >= aps_queue_size_upper
+    true
   end
 
   def dequeue_aps(application_name)
@@ -136,6 +98,14 @@ module ResqueAps
     end
   end
 
+  def aps_application_class=(klass)
+    @aps_application_class = klass
+  end
+  
+  def aps_application_class
+    @aps_application_class ||= ResqueAps::Application
+  end
+  
   def create_aps_application(name, cert_file, cert_passwd = nil)
     redis.set(aps_application_key(name), encode({'name' => name, 'cert_file' => cert_file, 'cert_passwd' => cert_passwd}))
     redis.sadd(:aps_applications, name)
@@ -143,7 +113,7 @@ module ResqueAps
   
   def aps_application(name)
     h = decode(redis.get(aps_application_key(name)))
-    return ResqueAps::Application.new(h) if h
+    return aps_application_class.new(h) if h
     nil
   end
   

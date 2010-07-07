@@ -1,7 +1,9 @@
+require 'openssl'
+
 module ResqueAps
   class Application
-    include Resque::Helpers
-    extend Resque::Helpers
+    include ResqueAps::Helper
+    extend ResqueAps::Helper
 
     attr_accessor :name, :cert_file, :cert_passwd
 
@@ -15,24 +17,24 @@ module ResqueAps
       count = 0
       start = Time.now
       app_name = args[0]
-      Resque.aps_application(app_name).socket do |socket|
+      Resque.aps_application(app_name).socket do |socket, app|
         while true
           n = Resque.dequeue_aps(app_name)
           if n.nil?
-            if run_hook :aps_nil_notification_retry, count, start
+            if app.aps_nil_notification_retry? count, start
               next
             else
               break
             end
           end
 
-          run_hook :before_aps_write, n
+          app.before_aps_write n
           begin
             socket.write(n.formatted)
-            run_hook :after_aps_write, n
+            app.after_aps_write n
           rescue
             logger.error application_exception($!) if logger
-            run_hook :failed_aps_write, n
+            app.failed_aps_write n
           end
           count += 1
         end
@@ -85,22 +87,22 @@ module ResqueAps
     end
     
     def socket(&block)
-      logger.debug("resque-aps: ssl_socket(#{app_key})") if logger
+      logger.debug("resque-aps: ssl_socket(#{name})") if logger
       exc = nil
 
-      socket, ssl_socket = create_sockets(Resque.aps_gateway_host, Resque.aps_gateway_port)
+      socket, ssl_socket = Application.create_sockets(cert_file, cert_passwd, Resque.aps_gateway_host, Resque.aps_gateway_port)
 
       begin
         ssl_socket.connect
-        yield ssl_socket if block_given?
+        yield ssl_socket, self if block_given?
       rescue
         exc = application_exception($!)
         if $! =~ /^SSL_connect .* certificate (expired|revoked)/
-          run_hook :notify_aps_admin, exc
+          notify_aps_admin exc
         end
         raise exc
       ensure
-        close_sockets(socket, ssl_socket)
+        Application.close_sockets(socket, ssl_socket)
       end
 
       exc
@@ -119,5 +121,22 @@ module ResqueAps
     def to_json
       to_hash.to_json
     end
+
+    def before_aps_write(notification)
+    end
+
+    def after_aps_write(notification)
+    end
+
+    def failed_aps_write(notification)
+    end
+
+    def notify_aps_admin(exception)
+    end
+
+    def aps_nil_notification_retry?(sent_count, start_time)
+      false
+    end
+
   end
 end

@@ -1,7 +1,7 @@
 module ResqueAps
   class Notification
-    include Resque::Helpers
-    extend Resque::Helpers
+    include ResqueAps::Helper
+    extend ResqueAps::Helper
 
     attr_accessor :application_name, :device_token, :payload
 
