@@ -18,6 +18,10 @@ module ResqueAps
           erb File.read(File.join(File.dirname(__FILE__), 'server/views/notifications.erb'))
         end
         
+        post "/aps/:application_name" do
+          Resque.enqueue(ResqueAps::Application, params[:application_name])
+          redirect url("/aps")
+        end
       end
 
     end
