@@ -1,4 +1,8 @@
-## 0.9.1 (2010-07-07)
+## 0.9.3 (2010-07-08)
+
+* Remove the aps_application class attribute. It's Ruby monkey patch the Application class.
+
+## 0.9.2 (2010-07-07)
 
 * Change the version to fix the dependencies
 

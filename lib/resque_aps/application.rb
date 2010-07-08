@@ -32,11 +32,11 @@ module ResqueAps
           begin
             socket.write(n.formatted)
             app.after_aps_write n
+            count += 1
           rescue
             logger.error Application.application_exception($!, name) if logger
             app.failed_aps_write n, $!
           end
-          count += 1
         end
       end
       logger.info("Sent #{count} #{app_name} notifications in batch over #{Time.now - start} sec.") if logger

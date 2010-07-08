@@ -98,14 +98,6 @@ module ResqueAps
     end
   end
 
-  def aps_application_class=(klass)
-    @aps_application_class = klass
-  end
-  
-  def aps_application_class
-    @aps_application_class ||= ResqueAps::Application
-  end
-  
   def create_aps_application(name, cert_file, cert_passwd = nil)
     redis.set(aps_application_key(name), encode({'name' => name, 'cert_file' => cert_file, 'cert_passwd' => cert_passwd}))
     redis.sadd(:aps_applications, name)
@@ -113,7 +105,7 @@ module ResqueAps
   
   def aps_application(name)
     h = decode(redis.get(aps_application_key(name)))
-    return aps_application_class.new(h) if h
+    return ResqueAps::Application.new(h) if h
     nil
   end
   
