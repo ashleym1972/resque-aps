@@ -1,5 +1,12 @@
 ## 0.9.3 (2010-07-08)
 
+* Use redis.[rpush,lpop,lrange] commands rather than Resque.[push,pop,peek] so that Resque queues are not created for the notifications.
+* Add a rescue around create_sockets to transform the exception into an application exception before raising it.
+* Fix the aps_application.erb table and link to the notifications.
+* Fix the application test.
+
+## 0.9.3 (2010-07-08)
+
 * Remove the aps_application class attribute. It's Ruby monkey patch the Application class.
 
 ## 0.9.2 (2010-07-07)
