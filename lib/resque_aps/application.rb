@@ -94,11 +94,15 @@ module ResqueAps
       logger.debug("resque-aps: ssl_socket(#{name})") if logger
       exc = nil
 
-      socket, ssl_socket = Application.create_sockets(cert || File.read(cert_file),
-                                                      certp || cert_passwd,
-                                                      host || Resque.aps_gateway_host,
-                                                      port || Resque.aps_gateway_port)
-
+      begin
+        socket, ssl_socket = Application.create_sockets(cert || File.read(cert_file),
+                                                        certp || cert_passwd,
+                                                        host || Resque.aps_gateway_host,
+                                                        port || Resque.aps_gateway_port)
+      rescue
+        raise Application.application_exception($!, name)
+      end
+      
       begin
         ssl_socket.connect
         yield ssl_socket, self if block_given?

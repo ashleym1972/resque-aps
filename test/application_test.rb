@@ -26,33 +26,34 @@ context "ResqueAps::Application" do
   end
 
   context "ApplicationWithHooks" do
-    class ApplicationWithHooks < ResqueAps::Application
-      def before_aps_write(notification)
-        logger.debug "before_aps_write #{notification.inspect}"
-      end
+    module ResqueAps
+      class Application
+        def before_aps_write(notification)
+          logger.debug "before_aps_write #{notification.inspect}"
+        end
 
-      def after_aps_write(notification)
-        logger.debug "after_aps_write #{notification.inspect}"
-      end
+        def after_aps_write(notification)
+          logger.debug "after_aps_write #{notification.inspect}"
+        end
 
-      def failed_aps_write(notification, exception)
-        logger.debug "failed_aps_write #{notification.inspect}"
-      end
+        def failed_aps_write(notification, exception)
+          logger.debug "failed_aps_write #{notification.inspect}"
+        end
 
-      def notify_aps_admin(exception)
-        logger.debug "notify_aps_admin #{exception}"
-      end
+        def notify_aps_admin(exception)
+          logger.debug "notify_aps_admin #{exception}"
+        end
 
-      def aps_nil_notification_retry?(sent_count, start_time)
-        logger.debug "aps_nil_notification_retry #{sent_count}"
-        false
+        def aps_nil_notification_retry?(sent_count, start_time)
+          logger.debug "aps_nil_notification_retry #{sent_count}"
+          false
+        end
       end
     end
     
     test "can perform with logging hooks" do
       n = ResqueAps::Notification.new('application_name' => 'TestApp', 'device_token' => 'aihdf08u2402hbdfquhiwr', 'payload' => '{"aps": { "alert": "hello"}}')
       assert Resque.enqueue_aps('TestApp', n)
-      Resque.aps_application_class = ApplicationWithHooks
       Resque.create_aps_application('TestApp', File.dirname(__FILE__) + "/../test-dev.pem", nil)
       ResqueAps::Application.perform('TestApp')
     end

@@ -7,6 +7,7 @@ require 'resque_aps/version'
 require 'resque_aps/server'
 require 'resque_aps/application'
 require 'resque_aps/notification'
+require 'resque_aps/unknown_attribute_error'
 
 module ResqueAps
 
@@ -72,27 +73,27 @@ module ResqueAps
   
   def enqueue_aps(application_name, notification)
     count = aps_notification_count_for_application(application_name)
-    push(aps_application_queue_key(application_name), notification.to_hash)
+    redis.rpush(aps_application_queue_key(application_name), encode(notification.to_hash))
     enqueue(ResqueAps::Application, application_name) if count <= aps_queue_size_lower || count >= aps_queue_size_upper
     true
   end
 
   def dequeue_aps(application_name)
-    h = pop(aps_application_queue_key(application_name))
+    h = decode(redis.lpop(aps_application_queue_key(application_name)))
     return ResqueAps::Notification.new(h) if h
     nil
   end
   
   # Returns the number of queued notifications for a given application
   def aps_notification_count_for_application(application_name)
-    size(aps_application_queue_key(application_name))
+    redis.llen(aps_application_queue_key(application_name)).to_i
   end
 
   # Returns an array of queued notifications for the given application
   def aps_notifications_for_application(application_name, start = 0, count = 1)
-    r = peek(aps_application_queue_key(application_name), start, count)
+    r = redis.lrange(aps_application_queue_key(application_name), start, count)
     if r 
-      r.map { |h| ResqueAps::Notification.new(h) }
+      r.map { |h| ResqueAps::Notification.new(decode(h)) }
     else
       []
     end

@@ -10,13 +10,12 @@
 
 <table>
   <tr>
-    <th></th>
     <th>Application</th>
-    <th>Notification count</th>
+    <th>Notification Count</th>
   </tr>
   <% resque.aps_application_names(start, start+20).each do |application_name| %>
     <tr>
-      <td><a href="<%= url "aps_applicatons/#{application_name}" %>"><%= application_name %></a></td>
+      <td><a href="<%= url "aps/#{application_name}" %>"><%= application_name %></a></td>
       <td><%= resque.aps_notification_count_for_application(application_name) %></td>
     </tr>
   <% end %>
