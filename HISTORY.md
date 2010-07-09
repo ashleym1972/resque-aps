@@ -1,4 +1,8 @@
-## 0.9.3 (2010-07-08)
+## 0.9.5 (2010-07-08)
+
+* Added Feedback class 
+
+## 0.9.4 (2010-07-08)
 
 * Use redis.[rpush,lpop,lrange] commands rather than Resque.[push,pop,peek] so that Resque queues are not created for the notifications.
 * Add a rescue around create_sockets to transform the exception into an application exception before raising it.

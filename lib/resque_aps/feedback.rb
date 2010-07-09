@@ -5,6 +5,8 @@ module ResqueAps
     include ResqueAps::Helper
     extend ResqueAps::Helper
 
+    @queue = "apple_push_service"
+    
     attr_accessor :application_name, :device_token, :received_at
 
     def initialize(attributes)
