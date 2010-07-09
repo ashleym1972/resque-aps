@@ -128,12 +128,15 @@ module ResqueAps
     end
 
     def before_aps_write(notification)
+      logger.debug("ResqueAps[before_write]: #{notification}") if logger
     end
 
     def after_aps_write(notification)
+      logger.debug("ResqueAps[after_write]: #{notification}") if logger
     end
 
     def failed_aps_write(notification, exception)
+      logger.error("ResqueAps[write_failed]: #{exception} (#{notification}): #{exception.backtrace.join("\n")}") if logger
     end
 
     def notify_aps_admin(exception)
@@ -143,5 +146,21 @@ module ResqueAps
       false
     end
 
+    def before_aps_read
+      logger.debug("ResqueAps[before_read]:") if logger
+    end
+    
+    def after_aps_read(feedback)
+      logger.debug("ResqueAps[after_read]: #{feedback.to_s}") if logger
+    end
+    
+    def aps_read_error(exception)
+      logger.error("ResqueAps[read_error]: #{exception} (#{application_name}): #{exception.backtrace.join("\n")}") if logger
+    end
+
+    def aps_read_failed
+      logger.error("ResqueAps[read_failed]: Bad data on the socket (#{application_name})") if logger
+    end
+    
   end
 end

@@ -7,6 +7,7 @@ require 'resque_aps/version'
 require 'resque_aps/server'
 require 'resque_aps/application'
 require 'resque_aps/notification'
+require 'resque_aps/feedback'
 require 'resque_aps/unknown_attribute_error'
 
 module ResqueAps
