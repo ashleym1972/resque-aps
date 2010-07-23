@@ -108,7 +108,7 @@ module ResqueAps
         yield ssl_socket, self if block_given?
       rescue
         exc = Application.application_exception($!, name)
-        if $! =~ /^SSL_connect .* certificate (expired|revoked)/
+        if $!.message =~ /^SSL_connect .* certificate (expired|revoked)/
           notify_aps_admin exc
         end
         raise exc

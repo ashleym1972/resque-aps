@@ -1,3 +1,7 @@
+## 0.9.6 (2010-07-23)
+
+* Fixed the revoked or expired exception identification code
+
 ## 0.9.5 (2010-07-08)
 
 * Added Feedback class 
