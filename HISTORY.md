@@ -1,3 +1,7 @@
+## 0.9.7 (2010-07-26)
+
+* Add a rake task to get the lengths of the application queues.
+
 ## 0.9.6 (2010-07-23)
 
 * Fixed the revoked or expired exception identification code

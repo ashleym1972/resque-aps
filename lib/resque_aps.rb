@@ -114,6 +114,7 @@ module ResqueAps
   # Returns an array of applications based on start and count
   def aps_application_names(start = 0, count = 1)
     a = redis.smembers(:aps_applications)
+    return a if count == 0
     ret = a[start..(start + count)]
     return [] unless ret
     ret
