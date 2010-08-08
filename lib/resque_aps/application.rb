@@ -155,11 +155,11 @@ module ResqueAps
     end
     
     def aps_read_error(exception)
-      logger.error("ResqueAps[read_error]: #{exception} (#{application_name}): #{exception.backtrace.join("\n")}") if logger
+      logger.error("ResqueAps[read_error]: #{exception} (#{name}): #{exception.backtrace.join("\n")}") if logger
     end
 
     def aps_read_failed
-      logger.error("ResqueAps[read_failed]: Bad data on the socket (#{application_name})") if logger
+      logger.error("ResqueAps[read_failed]: Bad data on the socket (#{name})") if logger
     end
     
   end

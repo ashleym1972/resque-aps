@@ -1,3 +1,7 @@
+## 0.9.8 (2010-08-08)
+
+* Fix a bug in the aps_read_error logging method.
+
 ## 0.9.7 (2010-07-26)
 
 * Add a rake task to get the lengths of the application queues.
