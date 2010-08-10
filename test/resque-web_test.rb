@@ -29,7 +29,7 @@ context "on GET to /aps/some_ivar_application" do
   setup do
     Resque.redis.flushall
     Resque.create_aps_application(:some_ivar_application, nil, nil)
-    n = ResqueAps::Notification.new('application_name' => 'some_ivar_application', 'device_token' => 'aihdf08u2402hbdfquhiwr', 'payload' => '{"aps": { "alert": "hello"}}')
+    n = Resque::Plugins::Aps::Notification.new('application_name' => 'some_ivar_application', 'device_token' => 'aihdf08u2402hbdfquhiwr', 'payload' => '{"aps": { "alert": "hello"}}')
     assert Resque.enqueue_aps(:some_ivar_application, n)
     assert Resque.enqueue_aps(:some_ivar_application, n)
     assert Resque.enqueue_aps(:some_ivar_application, n)

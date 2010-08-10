@@ -1,6 +1,6 @@
 require File.dirname(__FILE__) + '/test_helper'
 
-context "ResqueAps" do
+context "Resque::Plugins::Aps" do
   setup do
     Resque.redis.flushall
   end
@@ -43,7 +43,7 @@ context "ResqueAps" do
   end
 
   test "can enqueue aps notifications" do
-    n = ResqueAps::Notification.new('application_name' => 'SomeApp', 'device_token' => 'aihdf08u2402hbdfquhiwr', 'payload' => '{"aps": { "alert": "hello"}}')
+    n = Resque::Plugins::Aps::Notification.new('application_name' => 'SomeApp', 'device_token' => 'aihdf08u2402hbdfquhiwr', 'payload' => '{"aps": { "alert": "hello"}}')
     assert Resque.enqueue_aps('SomeApp', n)
     assert_equal 1, Resque.aps_notification_count_for_application('SomeApp')
     assert Resque.enqueue_aps('SomeApp', n)
@@ -51,21 +51,21 @@ context "ResqueAps" do
   end
 
   test "can dequeue aps notifications" do
-    n = ResqueAps::Notification.new('application_name' => 'SomeApp', 'device_token' => 'aihdf08u2402hbdfquhiwr', 'payload' => '{"aps": { "alert": "hello"}}')
+    n = Resque::Plugins::Aps::Notification.new('application_name' => 'SomeApp', 'device_token' => 'aihdf08u2402hbdfquhiwr', 'payload' => '{"aps": { "alert": "hello"}}')
     assert Resque.enqueue_aps('SomeApp', n)
     assert_equal 1, Resque.aps_notification_count_for_application('SomeApp')
 
     nn = Resque.dequeue_aps('SomeApp')
 
     assert nn
-    assert_kind_of ResqueAps::Notification, nn
+    assert_kind_of Resque::Plugins::Aps::Notification, nn
     assert_equal n.application_name, nn.application_name
     assert_equal n.device_token,     nn.device_token
     assert_equal n.payload,          nn.payload
   end
 
   test "knows how big the application notification queue is" do
-    n = ResqueAps::Notification.new('application_name' => 'SomeApp', 'device_token' => 'aihdf08u2402hbdfquhiwr', 'payload' => '{"aps": { "alert": "hello"}}')
+    n = Resque::Plugins::Aps::Notification.new('application_name' => 'SomeApp', 'device_token' => 'aihdf08u2402hbdfquhiwr', 'payload' => '{"aps": { "alert": "hello"}}')
     assert Resque.enqueue_aps('SomeApp', n)
     assert_equal 1, Resque.aps_notification_count_for_application('SomeApp')
 
@@ -74,7 +74,7 @@ context "ResqueAps" do
   end
 
   test "can get a list of application notifications" do
-    n = ResqueAps::Notification.new('application_name' => 'SomeApp', 'device_token' => 'aihdf08u2402hbdfquhiwr', 'payload' => '{"aps": { "alert": "hello"}}')
+    n = Resque::Plugins::Aps::Notification.new('application_name' => 'SomeApp', 'device_token' => 'aihdf08u2402hbdfquhiwr', 'payload' => '{"aps": { "alert": "hello"}}')
     assert Resque.enqueue_aps('SomeApp', n)
     assert Resque.enqueue_aps('SomeApp', n)
     assert Resque.enqueue_aps('SomeApp', n)

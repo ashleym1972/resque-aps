@@ -1,7 +1,9 @@
 require 'rack/test'
 require 'resque/server'
 
-module ResqueAps
+module Resque
+  module Plugins
+    module Aps
   module TestHelper
     class Test::Unit::TestCase
       include Rack::Test::Methods
@@ -16,5 +18,7 @@ module ResqueAps
       end
     end
   end
+  end
+end
 end
 

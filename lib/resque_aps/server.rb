@@ -1,6 +1,8 @@
 
 # Extend Resque::Server to add tabs
-module ResqueAps
+module Resque
+  module Plugins
+    module Aps
   
   module Server
 
@@ -19,7 +21,7 @@ module ResqueAps
         end
         
         post "/aps/:application_name" do
-          Resque.enqueue(ResqueAps::Application, params[:application_name])
+          Resque.enqueue(Resque::Plugins::Aps::Application, params[:application_name])
           redirect url("/aps")
         end
       end
@@ -30,4 +32,6 @@ module ResqueAps
 
   end
   
+  end
+end
 end

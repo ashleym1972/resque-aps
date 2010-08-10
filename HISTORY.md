@@ -1,3 +1,7 @@
+## 0.9.9 (2010-08-10)
+
+* Changed the module from ResqueAps to Resque::Plugins::Aps, per Resque documentation
+
 ## 0.9.8 (2010-08-08)
 
 * Fix a bug in the aps_read_error logging method.

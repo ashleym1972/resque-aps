@@ -1,9 +1,11 @@
 require 'timeout'
 
-module ResqueAps
+module Resque
+  module Plugins
+    module Aps
   class Feedback
-    include ResqueAps::Helper
-    extend ResqueAps::Helper
+    include Resque::Plugins::Aps::Helper
+    extend Resque::Plugins::Aps::Helper
 
     @queue = "apple_push_service"
     
@@ -11,7 +13,7 @@ module ResqueAps
 
     def initialize(attributes)
       attributes.each do |k, v|
-        respond_to?(:"#{k}=") ? send(:"#{k}=", v) : raise(ResqueAps::UnknownAttributeError, "unknown attribute: #{k}")
+        respond_to?(:"#{k}=") ? send(:"#{k}=", v) : raise(Resque::Plugins::Aps::UnknownAttributeError, "unknown attribute: #{k}")
       end
     end
         
@@ -67,7 +69,7 @@ module ResqueAps
           timeout(5) do
             until socket.eof?
               app.before_aps_read
-              feedback = read_feedback(ssl_socket, app_name, product_id)
+              feedback = read_feedback(socket, app_name, product_id)
               if feedback
                 count += 1
                 app.after_app_read(feedback)
@@ -85,4 +87,6 @@ module ResqueAps
     end
 
   end
+  end
+end
 end

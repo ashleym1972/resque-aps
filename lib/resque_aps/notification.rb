@@ -1,13 +1,15 @@
-module ResqueAps
+module Resque
+  module Plugins
+    module Aps
   class Notification
-    include ResqueAps::Helper
-    extend ResqueAps::Helper
+    include Resque::Plugins::Aps::Helper
+    extend Resque::Plugins::Aps::Helper
 
     attr_accessor :application_name, :device_token, :payload
 
     def initialize(attributes)
       attributes.each do |k, v|
-        respond_to?(:"#{k}=") ? send(:"#{k}=", v) : raise(ResqueAps::UnknownAttributeError, "unknown attribute: #{k}")
+        respond_to?(:"#{k}=") ? send(:"#{k}=", v) : raise(Resque::Plugins::Aps::UnknownAttributeError, "unknown attribute: #{k}")
       end
     end
         
@@ -156,7 +158,7 @@ module ResqueAps
     # The message formatted for sending in binary
     #
     def formatted
-      ResqueAps::Notification.format_message_for_sending(self.device_token, self.payload)
+      Resque::Plugins::Aps::Notification.format_message_for_sending(self.device_token, self.payload)
     end
 
     #
@@ -190,4 +192,6 @@ module ResqueAps
       # "\0\0 #{token_hex}\0#{json.length.chr}#{json}"
   	end
   end
+  end
+end
 end

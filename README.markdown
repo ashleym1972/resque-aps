@@ -29,7 +29,7 @@ To extend the system create an initializer:
     Resque.aps_feedback_host = AppConfig.apn_feedback_host
     Resque.aps_feedback_port = AppConfig.apn_feedback_port
 
-    module ResqueAps
+    module Resque::Plugins::Aps
       class Application
         def after_aps_write(notification)
           logger.info("Sent Notification [#{notification.application_name}] [#{notification.device_token}] [#{notification.payload}]") if logger

@@ -34,7 +34,7 @@ begin
     gemspec.email = "ashleym1972@gmail.com"
     gemspec.homepage = "http://github.com/ashleym1972/resque-aps"
     gemspec.authors = ["Ashley Martens"]
-    gemspec.version = ResqueAps::Version
+    gemspec.version = Resque::Plugins::Aps::Version
 
     gemspec.add_dependency "redis", ">= 1.0.7"
     gemspec.add_dependency "resque", ">= 1.5.0"
@@ -47,9 +47,9 @@ end
 
 desc "Push a new version to Gemcutter"
 task :publish => [ :test, :gemspec, :build ] do
-  system "git tag v#{ResqueAps::Version}"
-  system "git push origin v#{ResqueAps::Version}"
+  system "git tag v#{Resque::Plugins::Aps::Version}"
+  system "git push origin v#{Resque::Plugins::Aps::Version}"
   system "git push origin master"
-  system "gem push pkg/resque-aps-#{ResqueAps::Version}.gem"
+  system "gem push pkg/resque-aps-#{Resque::Plugins::Aps::Version}.gem"
   system "git clean -fd"
 end

@@ -1,9 +1,11 @@
 require 'openssl'
 
-module ResqueAps
+module Resque
+  module Plugins
+    module Aps
   class Application
-    include ResqueAps::Helper
-    extend ResqueAps::Helper
+    include Resque::Plugins::Aps::Helper
+    extend Resque::Plugins::Aps::Helper
 
     attr_accessor :name, :cert_file, :cert_passwd
 
@@ -86,7 +88,7 @@ module ResqueAps
     
     def initialize(attributes)
       attributes.each do |k, v|
-        respond_to?(:"#{k}=") ? send(:"#{k}=", v) : raise(ResqueAps::UnknownAttributeError, "unknown attribute: #{k}")
+        respond_to?(:"#{k}=") ? send(:"#{k}=", v) : raise(Resque::Plugins::Aps::UnknownAttributeError, "unknown attribute: #{k}")
       end
     end
     
@@ -161,6 +163,8 @@ module ResqueAps
     def aps_read_failed
       logger.error("ResqueAps[read_failed]: Bad data on the socket (#{name})") if logger
     end
-    
+
+      end
+    end
   end
 end

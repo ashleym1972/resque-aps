@@ -10,7 +10,9 @@ require 'resque_aps/notification'
 require 'resque_aps/feedback'
 require 'resque_aps/unknown_attribute_error'
 
-module ResqueAps
+module Resque
+  module Plugins
+    module Aps
 
   def logger=(logger)
     @logger = logger
@@ -75,13 +77,13 @@ module ResqueAps
   def enqueue_aps(application_name, notification)
     count = aps_notification_count_for_application(application_name)
     redis.rpush(aps_application_queue_key(application_name), encode(notification.to_hash))
-    enqueue(ResqueAps::Application, application_name) if count <= aps_queue_size_lower || count >= aps_queue_size_upper
+    enqueue(Resque::Plugins::Aps::Application, application_name) if count <= aps_queue_size_lower || count >= aps_queue_size_upper
     true
   end
 
   def dequeue_aps(application_name)
     h = decode(redis.lpop(aps_application_queue_key(application_name)))
-    return ResqueAps::Notification.new(h) if h
+    return Resque::Plugins::Aps::Notification.new(h) if h
     nil
   end
   
@@ -94,7 +96,7 @@ module ResqueAps
   def aps_notifications_for_application(application_name, start = 0, count = 1)
     r = redis.lrange(aps_application_queue_key(application_name), start, count)
     if r 
-      r.map { |h| ResqueAps::Notification.new(decode(h)) }
+      r.map { |h| Resque::Plugins::Aps::Notification.new(decode(h)) }
     else
       []
     end
@@ -107,7 +109,7 @@ module ResqueAps
   
   def aps_application(name)
     h = decode(redis.get(aps_application_key(name)))
-    return ResqueAps::Application.new(h) if h
+    return Resque::Plugins::Aps::Application.new(h) if h
     nil
   end
   
@@ -132,9 +134,11 @@ module ResqueAps
   def aps_application_queue_key(application_name)
     "#{aps_application_key(application_name)}:queue"
   end
+    end
+  end
 end
 
-Resque.extend ResqueAps
+Resque.extend Resque::Plugins::Aps
 Resque::Server.class_eval do
-  include ResqueAps::Server
+  include Resque::Plugins::Aps::Server
 end

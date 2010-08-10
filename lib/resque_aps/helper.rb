@@ -1,5 +1,7 @@
 
-module ResqueAps
+module Resque
+  module Plugins
+    module Aps
   module Helper
     extend Resque::Helpers
 
@@ -8,4 +10,6 @@ module ResqueAps
     end
 
   end
+  end
+end
 end
