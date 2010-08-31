@@ -51,6 +51,8 @@ module Resque
             end
           end
           logger.info("Sent #{count} #{app_name} notifications in batch over #{Time.now - start} sec.") if logger
+        ensure
+          Resque.dequeue_aps_application(app_name)
         end
     
         #
