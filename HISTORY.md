@@ -1,3 +1,7 @@
+## 0.9.12 (2010-08-31)
+
+* Bug fix
+
 ## 0.9.11 (2010-08-31)
 
 * Added version 2 of the push protocol
