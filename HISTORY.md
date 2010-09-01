@@ -1,3 +1,7 @@
+## 0.9.14 (2010-09-1)
+
+* Corrected path issues
+
 ## 0.9.13 (2010-09-1)
 
 * Feedback bug fix
