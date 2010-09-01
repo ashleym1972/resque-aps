@@ -36,8 +36,8 @@ begin
     gemspec.authors = ["Ashley Martens"]
     gemspec.version = Resque::Plugins::Aps::Version
 
-    gemspec.add_dependency "redis", ">= 1.0.7"
-    gemspec.add_dependency "resque", ">= 1.5.0"
+    # gemspec.add_dependency "redis", ">= 1.0.7"
+    # gemspec.add_dependency "resque", ">= 1.5.0"
     gemspec.add_development_dependency "jeweler"
     gemspec.add_development_dependency "mocha"
     gemspec.add_development_dependency "rack-test"
