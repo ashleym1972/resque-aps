@@ -45,7 +45,7 @@ module Resque
                 logger.error Application.application_exception($!, app_name) if logger
                 app.failed_aps_write n, $!
                 logger.error "Sent #{count} notifications before failure." if logger
-                redis.rpush(aps_application_queue_key(app_name), encode(n.to_hash))
+                Resque.enqueue_aps(app_name, n)
                 break
               end
             end

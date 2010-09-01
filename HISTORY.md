@@ -1,3 +1,8 @@
+## 0.9.11 (2010-08-31)
+
+* Added version 2 of the push protocol
+* Loads of bug fixes for conditions around broken pipes
+
 ## 0.9.9 (2010-08-10)
 
 * Changed the module from ResqueAps to Resque::Plugins::Aps, per Resque documentation
