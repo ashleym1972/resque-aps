@@ -19,10 +19,11 @@ context "Resque::Plugins::Aps::Application" do
   end
   
   test "can perform" do
-    n = Resque::Plugins::Aps::Notification.new('application_name' => 'TestApp', 'device_token' => 'aihdf08u2402hbdfquhiwr', 'payload' => '{"aps": { "alert": "hello"}}')
+    n = Resque::Plugins::Aps::Notification.new('application_name' => 'TestApp', 'device_token' => '3ECA0F9A3405B980A88A61A1556AF8B7F1DF5F7F109E1476A781E8220C4FE561', 'payload' => '{"aps": { "alert": "hello"}}')
     assert Resque.enqueue_aps('TestApp', n)
     Resque.create_aps_application('TestApp', File.dirname(__FILE__) + "/../test-dev.pem", nil)
     Resque::Plugins::Aps::Application.perform('TestApp')
+    assert_equal 0, Resque.aps_notification_count_for_application('TestApp')
   end
 
   context "ApplicationWithHooks" do
@@ -52,10 +53,19 @@ context "Resque::Plugins::Aps::Application" do
     end
     
     test "can perform with logging hooks" do
+      n = Resque::Plugins::Aps::Notification.new('application_name' => 'TestApp', 'device_token' => '3ECA0F9A3405B980A88A61A1556AF8B7F1DF5F7F109E1476A781E8220C4FE561', 'payload' => '{"aps": { "alert": "hello"}}')
+      assert Resque.enqueue_aps('TestApp', n)
+      Resque.create_aps_application('TestApp', File.dirname(__FILE__) + "/../test-dev.pem", nil)
+      Resque::Plugins::Aps::Application.perform('TestApp')
+      assert_equal 0, Resque.aps_notification_count_for_application('TestApp')
+    end
+
+    test "can perform with failure logging hooks" do
       n = Resque::Plugins::Aps::Notification.new('application_name' => 'TestApp', 'device_token' => 'aihdf08u2402hbdfquhiwr', 'payload' => '{"aps": { "alert": "hello"}}')
       assert Resque.enqueue_aps('TestApp', n)
       Resque.create_aps_application('TestApp', File.dirname(__FILE__) + "/../test-dev.pem", nil)
       Resque::Plugins::Aps::Application.perform('TestApp')
+      assert_equal 0, Resque.aps_notification_count_for_application('TestApp')
     end
   end
 end

@@ -79,7 +79,7 @@ module Resque
       end
   
       def enqueue_aps_application(application_name, override = false)
-        count_apps = aps_applications_queued_count(application_name)
+        count_apps = aps_applications_queued_count(application_name).to_i
         count_not  = aps_notification_count_for_application(application_name)
         if override || count_apps <= 0 || (count_apps < aps_application_job_limit && (count_not > aps_queue_size_upper && count_not % (aps_queue_size_upper / 10) == 0))
           enqueue(Resque::Plugins::Aps::Application, application_name)
@@ -88,7 +88,7 @@ module Resque
       end
       
       def dequeue_aps_application(application_name)
-        redis.decr(aps_application_queued_key(application_name)) if aps_applications_queued_count(application_name) > 0
+        redis.decr(aps_application_queued_key(application_name)) if aps_applications_queued_count(application_name).to_i > 0
       end
       
       def enqueue_aps(application_name, notification)

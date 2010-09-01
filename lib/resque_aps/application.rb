@@ -33,18 +33,20 @@ module Resque
               app.before_aps_write n
               begin
                 n.batch_id = count + 1
-                n.expiry   = (Time.now.utc + 1.hour).to_i
+                n.expiry   = Time.now.utc.to_i + 3600
                 socket.write(n.formatted)
                 app.after_aps_write n
                 count += 1
-                unless (resp = socket.read).blank?
-                  logger.error "Failure response: #{resp.inspect}" if logger
-                  break
-                end
+                # resp = socket.read
+                # if resp && resp != ""
+                #   # logger.error "Failure response: #{resp.inspect}" if logger
+                #   logger.error "Failure response: #{resp.bytes.to_a.map{|i| i.to_s(16)}.join}" if logger
+                #   break
+                # end
               rescue
                 logger.error Application.application_exception($!, app_name) if logger
                 app.failed_aps_write n, $!
-                logger.error "Sent #{count} notifications before failure." if logger
+                logger.error "#{$!}: Sent #{count} notifications before failure." if logger
                 Resque.enqueue_aps(app_name, n)
                 break
               end
