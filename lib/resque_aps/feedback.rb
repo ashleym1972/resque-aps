@@ -29,7 +29,7 @@ module Resque
           {:application_name => application_name, :device_token => device_token, :received_at => received_at}
         end
 
-        def self.read_feedback(ssl_socket, application_name, product_id)
+        def self.read_feedback(ssl_socket, application_name)
             data_str = ssl_socket.read(4)
             return nil unless data_str
             data_ary = data_str.unpack('N')
@@ -69,7 +69,7 @@ module Resque
               timeout(5) do
                 until socket.eof?
                   app.before_aps_read
-                  feedback = read_feedback(socket, app_name, product_id)
+                  feedback = read_feedback(socket, app_name)
                   if feedback
                     count += 1
                     app.after_aps_read(feedback)
