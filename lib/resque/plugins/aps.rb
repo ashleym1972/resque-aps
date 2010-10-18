@@ -61,34 +61,16 @@ module Resque
       def aps_application_job_limit
         @aps_application_job_limit ||= 5
       end
-  
-      def aps_applications_queued_count(application_name)
-        redis.get(aps_application_queued_key(application_name)) || 0
-      end
-  
-      def enqueue_aps_application(application_name, override = false)
-        count_apps = aps_applications_queued_count(application_name).to_i
-        count_not  = aps_notification_count_for_application(application_name)
-        if override || count_apps <= 0 || (count_apps < aps_application_job_limit && (count_not > aps_queue_size_upper && count_not % (aps_queue_size_upper / 10) == 0))
-          enqueue(Resque::Plugins::Aps::Application, application_name)
-          redis.incr(aps_application_queued_key(application_name))
-        end
-      end
-      
-      def dequeue_aps_application(application_name)
-        redis.decr(aps_application_queued_key(application_name)) if aps_applications_queued_count(application_name).to_i > 0
-      end
-      
+        
       def enqueue_aps(application_name, notification)
         redis.rpush(aps_application_queue_key(application_name), encode(notification.to_hash))
-        enqueue_aps_application(application_name)
+        Resque::Plugins::Aps::Application.new('name' => application_name).enqueue
         true
       end
 
       def dequeue_aps(application_name)
         h = decode(redis.lpop(aps_application_queue_key(application_name)))
-        return Resque::Plugins::Aps::Notification.new(h) if h
-        nil
+        h ? Resque::Plugins::Aps::Notification.new(h) : nil
       end
   
       # Returns the number of queued notifications for a given application
@@ -99,11 +81,7 @@ module Resque
       # Returns an array of queued notifications for the given application
       def aps_notifications_for_application(application_name, start = 0, count = 1)
         r = redis.lrange(aps_application_queue_key(application_name), start, count)
-        if r 
-          r.map { |h| Resque::Plugins::Aps::Notification.new(decode(h)) }
-        else
-          []
-        end
+        r ? r.map { |h| Resque::Plugins::Aps::Notification.new(decode(h)) } : []
       end
 
       def create_aps_application(name, cert_file, cert_passwd = nil)
@@ -113,17 +91,14 @@ module Resque
   
       def aps_application(name)
         h = decode(redis.get(aps_application_key(name)))
-        return Resque::Plugins::Aps::Application.new(h) if h
-        nil
+        h ? Resque::Plugins::Aps::Application.new(h) : nil
       end
   
       # Returns an array of applications based on start and count
       def aps_application_names(start = 0, count = 1)
         a = redis.smembers(:aps_applications)
         return a if count == 0
-        ret = a[start..(start + count)]
-        return [] unless ret
-        ret
+        a[start..(start + count)] || []
       end
 
       # Returns the number of application queues

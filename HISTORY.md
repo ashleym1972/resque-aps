@@ -1,3 +1,9 @@
+## 0.9.15 (2010-10-18)
+
+* Move the application enqueue/dequeue methods to the Application class
+* Fixed incr/decr issues around application (de-)queuing
+* Fixed the page size issue on application view
+
 ## 0.9.14 (2010-09-1)
 
 * Corrected path issues

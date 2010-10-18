@@ -14,7 +14,7 @@
     <th>Notification Count</th>
     <th></th>
   </tr>
-  <% resque.aps_application_names(start, start+20).each do |application_name| %>
+  <% resque.aps_application_names(start, 20).each do |application_name| %>
     <tr>
       <td><a href="<%= url "aps/#{application_name}" %>"><%= application_name %></a></td>
       <td><%= resque.aps_notification_count_for_application(application_name) %></td>
