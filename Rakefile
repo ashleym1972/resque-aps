@@ -23,7 +23,7 @@ begin
     puts "gem install jeweler"
   end
 
-  require 'resque_aps/version'
+  require 'resque/plugins/aps/version'
 
   Jeweler::Tasks.new do |gemspec|
     gemspec.name = "resque-aps"
