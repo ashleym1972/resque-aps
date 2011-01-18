@@ -255,10 +255,11 @@ module Resque
           end
 
           if count_apps <= 0 || (count_apps < Resque.aps_application_job_limit && (count_not > Resque.aps_queue_size_upper && count_not % (Resque.aps_queue_size_upper / 10) == 0))
-            enqueue(Resque::Plugins::Aps::Application, name)
+            Resque.enqueue(Resque::Plugins::Aps::Application, name)
             redis.incr(Resque.aps_application_queued_key(name))
-            delete_lock if locked
           end
+
+          delete_lock if locked
         end
 
         def dequeue
