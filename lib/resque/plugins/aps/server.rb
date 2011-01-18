@@ -22,6 +22,11 @@ module Resque
         
             post "/aps/:application_name" do
               Resque.enqueue(Resque::Plugins::Aps::Application, params[:application_name])
+              redirect url("/aps?page_size=0")
+            end
+            
+            put "/aps/:application_name" do
+              Resque.redis.set(Resque.aps_application_queued_key(params[:application_name]), 0)
               redirect url("/aps")
             end
           end

@@ -13,7 +13,7 @@ To install:
 
 You'll need to add this to your Rails rakefile to see the queue lengths:
 
-    require 'resque_aps/tasks'
+    require 'resque/plugins/aps/tasks'
     task "resque:setup" => :environment
 
     $ rake resque:aps:queue_lengths 

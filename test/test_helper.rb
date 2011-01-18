@@ -9,7 +9,7 @@ require 'test/unit'
 require 'mocha'
 require 'resque'
 require 'ruby-debug'
-require File.join(dir, '../lib/resque_aps')
+require File.join(dir, '../lib/resque/plugins/aps')
 $LOAD_PATH.unshift File.dirname(File.expand_path(__FILE__)) + '/../lib'
 
 

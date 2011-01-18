@@ -1,26 +1,34 @@
 <h1>Apple Push Notification Applications</h1>
 
+<% start = params[:start].to_i
+   page_size = params[:page_size] ? params[:page_size].to_i : 20
+%>
 <p class='intro'>
   The list below contains the APN application queues.
 </p>
 
 <p class='sub'>
-  Showing <%= start = params[:start].to_i %> to <%= start + 20 %> of <b><%=size = resque.aps_applications_count %></b> applications.
+  Showing <%= start %> to <%= start + page_size %> of <b><%=size = resque.aps_applications_count %></b> applications.
 </p>
 
 <table>
   <tr>
     <th>Application</th>
     <th>Notification Count</th>
+    <th>Queued Count</th>
     <th></th>
   </tr>
-  <% resque.aps_application_names(start, 20).each do |application_name| %>
+  <% resque.aps_application_names(start, page_size).each do |application_name| %>
     <tr>
       <td><a href="<%= url "aps/#{application_name}" %>"><%= application_name %></a></td>
       <td><%= resque.aps_notification_count_for_application(application_name) %></td>
+      <td><%= resque.aps_applications_queued_count(application_name) %></td>
       <td>
         <form action="<%= url "/aps/#{application_name}" %>" method="post">
           <input type="submit" value="Queue worker">
+        </form>
+        <form action="<%= url "/aps/#{application_name}" %>" method="put">
+          <input type="submit" value="Reset queue count">
         </form>
       </td>
     </tr>

@@ -9,54 +9,75 @@ module Resque
 
         attr_accessor :name, :cert_file, :cert_passwd
 
-        @queue = "apple_push_service"
+        @queue   = "apple_push_service"
+        @@CAFile = nil
 
         def inspect
           "#<#{self.class.name} #{name.inspect}, #{cert_passwd.inspect}, #{cert_file.inspect}>"
         end
     
         def self.perform(*args)
-          count = 0
-          start = Time.now
           app_name = args[0]
-          Resque.aps_application(app_name).socket do |socket, app|
-            while true
-              n = Resque.dequeue_aps(app_name)
-              if n.nil?
-                if app.aps_nil_notification_retry? count, start
-                  next
-                else
+          begin
+            count, duration, ex = Application.perform_no_fail(app_name)
+            logger.info("Sent #{count} #{app_name} notifications in batch over #{duration} sec.") if logger
+          ensure
+            Resque.dequeue_aps_application(app_name)
+          end
+        end
+        
+        def self.perform_no_fail(app_name, requeue = true, read_response = false)
+          count = 0
+          excep = nil
+          duration = Benchmark.realtime do
+            Resque.aps_application(app_name).socket do |socket, app|
+              while true
+                n = Resque.dequeue_aps(app_name)
+                if n.nil?
+                  if app.aps_nil_notification_retry? count, start
+                    next
+                  else
+                    break
+                  end
+                end
+
+                app.before_aps_write n
+                begin
+                  n.batch_id = count + 1
+                  n.expiry   = Time.now.utc.to_i + 3600
+                  socket.write(n.formatted)
+                  app.after_aps_write n
+                  count += 1
+                  if read_response
+                    resp = socket.read
+                    if resp && resp != ""
+                      # logger.error "Failure response: #{resp.inspect}" if logger
+                      logger.error "Failure response: #{resp.bytes.to_a.map{|i| i.to_s(16)}.join}" if logger
+                      break
+                    end
+                  end
+                rescue
+                  # logger.error Application.application_exception($!, app_name) if logger
+                  app.failed_aps_write n, $!
+                  logger.error "#{$!}: Sent #{count} notifications before failure." if logger
+                  Resque.enqueue_aps(app_name, n) if requeue
+                  excep = $!
                   break
                 end
               end
-
-              app.before_aps_write n
-              begin
-                n.batch_id = count + 1
-                n.expiry   = Time.now.utc.to_i + 3600
-                socket.write(n.formatted)
-                app.after_aps_write n
-                count += 1
-                # resp = socket.read
-                # if resp && resp != ""
-                #   # logger.error "Failure response: #{resp.inspect}" if logger
-                #   logger.error "Failure response: #{resp.bytes.to_a.map{|i| i.to_s(16)}.join}" if logger
-                #   break
-                # end
-              rescue
-                logger.error Application.application_exception($!, app_name) if logger
-                app.failed_aps_write n, $!
-                logger.error "#{$!}: Sent #{count} notifications before failure." if logger
-                Resque.enqueue_aps(app_name, n)
-                break
-              end
             end
           end
-          logger.info("Sent #{count} #{app_name} notifications in batch over #{Time.now - start} sec.") if logger
-        ensure
-          Resque.dequeue_aps_application(app_name)
+          return count, duration, excep
         end
     
+        def self.verify_ssl_certificate(preverify_ok, ssl_context)
+          if preverify_ok != true || ssl_context.error != 0
+            err_msg = "SSL Verification failed -- Preverify: #{preverify_ok}, Error: #{ssl_context.error_string} (#{ssl_context.error})"
+            raise OpenSSL::SSL::SSLError.new(err_msg)
+          end
+          true
+        end
+
         #
         # Create the TCP and SSL sockets for sending the notification
         #
@@ -64,6 +85,16 @@ module Resque
           ctx = OpenSSL::SSL::SSLContext.new
           ctx.key = OpenSSL::PKey::RSA.new(cert, passphrase)
           ctx.cert = OpenSSL::X509::Certificate.new(cert)
+
+          if @@CAFile && File.exists?(@@CAFile)
+            ctx.ca_file = @@CAFile
+          end
+          if ROOT_CA && File.directory?(ROOT_CA)
+            ctx.ca_path = ROOT_CA
+          end
+          ctx.verify_callback = proc do |preverify_ok, ssl_context|
+            Resque::Plugins::Aps::Application.verify_ssl_certificate(preverify_ok, ssl_context)
+          end
 
           s = TCPSocket.new(host, port)
           ssl = OpenSSL::SSL::SSLSocket.new(s, ctx)
@@ -123,7 +154,7 @@ module Resque
             yield ssl_socket, self if block_given?
           rescue
             exc = Application.application_exception($!, name)
-            if $!.message =~ /^SSL_connect .* certificate (expired|revoked)/
+            if $!.message =~ /^SSL_connect .* certificate (expired|revoked)/ || $!.message =~ /^SSL Verification failed/
               notify_aps_admin exc
             end
             raise exc
