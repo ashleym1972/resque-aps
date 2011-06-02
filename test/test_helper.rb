@@ -13,6 +13,7 @@ require 'resque'
 require 'ruby-debug'
 require 'resque_aps'
 
+ROOT_CA = '/etc/ssl/certs'
 
 #
 # make sure we can run redis

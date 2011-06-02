@@ -1,4 +1,5 @@
 require 'openssl'
+require 'benchmark'
 
 module Resque
   module Plugins
@@ -103,7 +104,7 @@ module Resque
           if @@CAFile && File.exists?(@@CAFile)
             ctx.ca_file = @@CAFile
           end
-          if ROOT_CA && File.directory?(ROOT_CA)
+          if defined?(ROOT_CA) && ROOT_CA && File.directory?(ROOT_CA)
             ctx.ca_path = ROOT_CA
           end
           ctx.verify_callback = proc do |preverify_ok, ssl_context|
