@@ -3,14 +3,15 @@
 # to do all the same stuff
 
 dir = File.dirname(File.expand_path(__FILE__))
+$LOAD_PATH.unshift dir + '/../lib'
+$: << (File.dirname(__FILE__) + '/../lib')
 
 require 'rubygems'
 require 'test/unit'
 require 'mocha'
 require 'resque'
 require 'ruby-debug'
-require File.join(dir, '../lib/resque/plugins/aps')
-$LOAD_PATH.unshift File.dirname(File.expand_path(__FILE__)) + '/../lib'
+require 'resque_aps'
 
 
 #
