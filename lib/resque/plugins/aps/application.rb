@@ -15,22 +15,35 @@ module Resque
         def inspect
           "#<#{self.class.name} #{name.inspect}, #{cert_passwd.inspect}, #{cert_file.inspect}>"
         end
-    
+
         def self.perform(*args)
           app_name = args[0]
           begin
             count, duration, ex = Application.perform_no_fail(app_name)
             logger.info("Sent #{count} #{app_name} notifications in batch over #{duration} sec.") if logger
-          ensure
+            raise ex if ex
             Resque.dequeue_aps_application(app_name)
+          rescue
+            Resque.dequeue_aps_application(app_name)
+            raise $!
           end
         end
-        
+
+        def self.perform_clear(app_name)
+          while true
+            count, duration, ex = Resque::Plugins::Aps::Application.perform_no_fail(app_name, false, true)
+            p "Sent #{count} #{app_name} notifications in batch over #{duration} sec. Returned #{ex.inspect}"
+            break if ex.nil?
+          end
+        end
+
         def self.perform_no_fail(app_name, requeue = true, read_response = false)
           count = 0
+          start = Time.now
           excep = nil
           duration = Benchmark.realtime do
             Resque.aps_application(app_name).socket do |socket, app|
+              n_old = nil
               while true
                 n = Resque.dequeue_aps(app_name)
                 if n.nil?
@@ -58,12 +71,13 @@ module Resque
                   end
                 rescue
                   # logger.error Application.application_exception($!, app_name) if logger
-                  app.failed_aps_write n, $!
+                  app.failed_aps_write n, $!, n_old
                   logger.error "#{$!}: Sent #{count} notifications before failure." if logger
                   Resque.enqueue_aps(app_name, n) if requeue
                   excep = $!
                   break
                 end
+                n_old = n
               end
             end
           end
@@ -181,7 +195,7 @@ module Resque
           logger.debug("ResqueAps[after_write]: #{notification}") if logger
         end
 
-        def failed_aps_write(notification, exception)
+        def failed_aps_write(notification, exception, previous_notification = nil)
           logger.error("ResqueAps[write_failed]: #{exception} (#{notification}): #{exception.backtrace.join("\n")}") if logger
         end
 

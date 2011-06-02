@@ -18,7 +18,17 @@
     <th>Queued Count</th>
     <th></th>
   </tr>
-  <% resque.aps_application_names(start, page_size).each do |application_name| %>
+  <% if page_size == 0 %>
+  <%   application_names = resque.aps_application_names(0, 0) %>
+  <%   application_names.sort! { |x,y|
+         ret = resque.aps_notification_count_for_application(y) <=> resque.aps_notification_count_for_application(x)
+         ret = resque.aps_applications_queued_count(y)          <=> resque.aps_applications_queued_count(x)          if ret == 0
+         ret
+       } %>
+  <% else %>
+  <%   application_names = resque.aps_application_names(start, page_size) %>
+  <% end %>
+  <% application_names.each do |application_name| %>
     <tr>
       <td><a href="<%= url "aps/#{application_name}" %>"><%= application_name %></a></td>
       <td><%= resque.aps_notification_count_for_application(application_name) %></td>
@@ -27,8 +37,11 @@
         <form action="<%= url "/aps/#{application_name}" %>" method="post">
           <input type="submit" value="Queue worker">
         </form>
-        <form action="<%= url "/aps/#{application_name}" %>" method="put">
-          <input type="submit" value="Reset queue count">
+        <form action="<%= url "/aps/#{application_name}/reset" %>" method="post">
+          <input type="submit" value="Reset queued count">
+        </form>
+        <form action="<%= url "/aps/#{application_name}/delete" %>" method="post">
+          <input type="submit" value="Remove queue">
         </form>
       </td>
     </tr>

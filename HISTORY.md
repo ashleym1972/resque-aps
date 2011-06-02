@@ -1,3 +1,10 @@
+## 0.9.16 (2011-06-02)
+
+* Add previous notification to the failed_aps_write call
+* Fixed aps_nil_notification_retry? call
+* Fixed Application perform
+* Improved web view
+
 ## 0.9.15 (2010-10-18)
 
 * Move the application enqueue/dequeue methods to the Application class

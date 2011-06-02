@@ -25,9 +25,14 @@ module Resque
               redirect url("/aps?page_size=0")
             end
             
-            put "/aps/:application_name" do
+            post "/aps/:application_name/reset" do
               Resque.redis.set(Resque.aps_application_queued_key(params[:application_name]), 0)
-              redirect url("/aps")
+              redirect url("/aps?page_size=0")
+            end
+            
+            post "/aps/:application_name/delete" do
+              Resque.delete_aps_application(params[:application_name])
+              redirect url("/aps?page_size=0")
             end
           end
 
