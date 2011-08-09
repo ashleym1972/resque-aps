@@ -1,14 +1,11 @@
 <h1>Apple Push Notification Applications</h1>
 
-<% start = params[:start].to_i
-   page_size = params[:page_size] ? params[:page_size].to_i : 20
-%>
 <p class='intro'>
   The list below contains the APN application queues.
 </p>
 
 <p class='sub'>
-  Showing <%= start %> to <%= start + page_size %> of <b><%=size = resque.aps_applications_count %></b> applications.
+  Showing <b><%=size = Resque.aps_applications_count %></b> applications.
 </p>
 
 <table>
@@ -18,21 +15,27 @@
     <th>Queued Count</th>
     <th></th>
   </tr>
-  <% if page_size == 0 %>
-  <%   application_names = resque.aps_application_names(0, 0) %>
-  <%   application_names.sort! { |x,y|
-         ret = resque.aps_notification_count_for_application(y) <=> resque.aps_notification_count_for_application(x)
-         ret = resque.aps_applications_queued_count(y)          <=> resque.aps_applications_queued_count(x)          if ret == 0
+  <%   
+       application_names = Resque.aps_application_names(0, 0)
+       application_data  = {}
+       application_names.each do |app_name|
+         application_data[app_name] = [
+           Resque.aps_notification_count_for_application(app_name),
+           Resque.aps_applications_queued_count(app_name).to_i
+         ]
+       end
+       application_names.sort! { |x,y|
+         ret = application_data[y][0] <=> application_data[x][0]
+         ret = application_data[y][1] <=> application_data[x][1] if ret == 0
+         ret = x                      <=> y                      if ret == 0
          ret
-       } %>
-  <% else %>
-  <%   application_names = resque.aps_application_names(start, page_size) %>
-  <% end %>
+       }
+  %>
   <% application_names.each do |application_name| %>
     <tr>
       <td><a href="<%= url "aps/#{application_name}" %>"><%= application_name %></a></td>
-      <td><%= resque.aps_notification_count_for_application(application_name) %></td>
-      <td><%= resque.aps_applications_queued_count(application_name) %></td>
+      <td><%= application_data[application_name][0] %></td>
+      <td><%= application_data[application_name][1] %></td>
       <td>
         <form action="<%= url "/aps/#{application_name}" %>" method="post">
           <input type="submit" value="Queue worker">
@@ -48,4 +51,3 @@
   <% end %>
 </table>
 
-<%= partial :next_more, :start => start, :size => size %>

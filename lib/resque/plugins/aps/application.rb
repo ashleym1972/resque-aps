@@ -19,13 +19,15 @@ module Resque
 
         def self.perform(*args)
           app_name = args[0]
+          @aps_retry = args[1] || false
           begin
-            count, duration, ex = Application.perform_no_fail(app_name)
+            Resque.enqueue_aps_application(app_name) if @aps_retry
+            count, duration, ex = Resque::Plugins::Aps::Application.perform_no_fail(app_name)
             logger.info("Sent #{count} #{app_name} notifications in batch over #{duration} sec.") if logger
+            Resque.dequeue_aps_application(app_name) if @aps_retry
             raise ex if ex
-            Resque.dequeue_aps_application(app_name)
           rescue
-            Resque.dequeue_aps_application(app_name)
+            Resque.dequeue_aps_application(app_name) if @aps_retry
             raise $!
           end
         end
@@ -48,7 +50,7 @@ module Resque
               while true
                 n = Resque.dequeue_aps(app_name)
                 if n.nil?
-                  if app.aps_nil_notification_retry? count, start
+                  if @aps_retry && app.aps_nil_notification_retry?(count, start)
                     next
                   else
                     break
@@ -144,13 +146,13 @@ module Resque
           exc.set_backtrace(exception.backtrace)
           return exc
         end
-    
+
         def initialize(attributes)
           attributes.each do |k, v|
             respond_to?(:"#{k}=") ? send(:"#{k}=", v) : raise(Resque::Plugins::Aps::UnknownAttributeError, "unknown attribute: #{k}")
           end
         end
-    
+
         def socket(cert = nil, certp = nil, host = nil, port = nil, &block)
           logger.debug("resque-aps: ssl_socket(#{name})") if logger
           exc = nil
@@ -163,7 +165,7 @@ module Resque
           rescue
             raise Application.application_exception($!, name)
           end
-      
+
           begin
             ssl_socket.connect
             yield ssl_socket, self if block_given?
@@ -183,7 +185,7 @@ module Resque
         def to_hash
           {'name' => name, 'cert_file' => cert_file, 'cert_passwd' => cert_passwd}
         end
-    
+
         def to_json
           to_hash.to_json
         end
@@ -221,64 +223,6 @@ module Resque
 
         def aps_read_failed
           logger.error("ResqueAps[read_failed]: Bad data on the socket (#{name})") if logger
-        end
-
-
-
-
-
-        def queued_count
-          (redis.get(Resque.aps_application_queued_key(name)) || 0).to_i
-        end
-
-        def lock_key
-          @lock_key ||= "#{Resque.aps_application_key(name)}:lock"
-        end
-        
-        def redis
-          Resque.redis
-        end
-        
-        def acquire_lock
-          if redis.setnx(lock_key, Time.now.utc.to_i + 1)
-            true
-          elsif Time.at(redis.get(lock_key).to_i) > Time.now
-            delete_lock
-            acquire_lock
-          else
-            false
-          end
-        end
-
-        def delete_lock
-          redis.del(lock_key)
-        end
-
-        def enqueue(override = false)
-          count_apps = 0
-          count_not  = 0
-          locked     = false
-
-          unless override
-            count_apps = queued_count
-            if count_apps == 0
-              locked     = acquire_lock
-              return unless locked
-              count_apps = queued_count
-            end
-            count_not  = Resque.aps_notification_count_for_application(name)
-          end
-
-          if count_apps <= 0 || (count_apps < Resque.aps_application_job_limit && (count_not > Resque.aps_queue_size_upper && count_not % (Resque.aps_queue_size_upper / 10) == 0))
-            Resque.enqueue(Resque::Plugins::Aps::Application, name)
-            redis.incr(Resque.aps_application_queued_key(name))
-          end
-
-          delete_lock if locked
-        end
-
-        def dequeue
-          redis.decr(Resque.aps_application_queued_key(name))
         end
 
       end

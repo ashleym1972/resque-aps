@@ -10,14 +10,16 @@ module Resque
 
           base.class_eval do
 
+            aps_dir = File.dirname(File.expand_path(__FILE__)) + "/server/views"
+
             get "/aps" do
               # Is there a better way to specify alternate template locations with sinatra?
-              erb File.read(File.join(File.dirname(__FILE__), 'server/views/aps_applications.erb'))
+              erb File.read("#{aps_dir}/aps_applications.erb"), :resque => Resque
             end
 
             get "/aps/:application_name" do
               # Is there a better way to specify alternate template locations with sinatra?
-              erb File.read(File.join(File.dirname(__FILE__), 'server/views/notifications.erb'))
+              erb File.read("#{aps_dir}/notifications.erb"), :resque => Resque
             end
         
             post "/aps/:application_name" do

@@ -5,12 +5,14 @@ module Resque
         include Resque::Plugins::Aps::Helper
         extend Resque::Plugins::Aps::Helper
 
-        attr_accessor :application_name, :device_token, :payload, :batch_id, :expiry
+        attr_accessor :application_name, :device_token, :payload, :batch_id, :expiry, :created_at
 
         def initialize(attributes)
           attributes.each do |k, v|
             respond_to?(:"#{k}=") ? send(:"#{k}=", v) : raise(Resque::Plugins::Aps::UnknownAttributeError, "unknown attribute: #{k}")
           end
+          @created_at = Time.now.utc unless @created_at
+          @created_at = Time.parse(@created_at) if @created_at.kind_of?(String)
         end
         
         def inspect

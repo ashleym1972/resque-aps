@@ -63,23 +63,44 @@ module Resque
       end
 
       def aps_applications_queued_count(application_name)
-        Resque::Plugins::Aps::Application.new('name' => application_name).queued_count
+        (redis.get(Resque.aps_application_queued_key(name)) || 0).to_i
       end
 
+      # Increase the count of queued application workers
+      def enqueue_aps_application(application_name, override = false)
+        res = redis.incr(aps_application_queued_key(application_name))
+      end
+
+      # Decrease the count of queued application workers
       def dequeue_aps_application(application_name)
-        Resque::Plugins::Aps::Application.new('name' => application_name).dequeue
+        res = redis.decr(aps_application_queued_key(application_name))
       end
 
+      # Push the given notification onto the given application queue
+      # returns true
       def enqueue_aps(application_name, notification)
         create_aps_application(application_name, nil, nil) unless aps_application_exists?(application_name)
         redis.rpush(aps_application_queue_key(application_name), encode(notification.to_hash))
-        Resque::Plugins::Aps::Application.new('name' => application_name).enqueue
+        if inline?
+          Resque::Plugins::Aps::Application.perform(application_name, false)
+        end
         true
       end
 
+      # Pop the oldest notification off the given application queue
+      # returns nil - if there are none on the queue
       def dequeue_aps(application_name)
         h = decode(redis.lpop(aps_application_queue_key(application_name)))
         h ? Resque::Plugins::Aps::Notification.new(h) : nil
+      end
+
+
+      # Age of the oldest notification in the given application queue, in seconds
+      # returns 0 - if there are no notifications on the queue or the oldest has no create time
+      def aps_age(application_name)
+        h = decode(redis.lindex(aps_application_queue_key(application_name), 0))
+        res = h ? h['created_at'] ? Time.now.utc - Time.parse(h['created_at']) : 0 : 0
+        return res
       end
 
       # Returns the number of queued notifications for a given application

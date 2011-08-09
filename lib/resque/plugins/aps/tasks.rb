@@ -19,6 +19,17 @@ namespace :resque do
         abort "None"
       end
     end
+
+    desc "Reset the queued worker counts"
+    task :reset_queue_workers => :setup do
+      require 'resque'
+      require 'resque_aps'
+
+      application_names = Resque.aps_application_names(0, 0)
+      application_names.each do |application_name|
+        Resque.redis.set(Resque.aps_application_queued_key(application_name), 0)
+      end      
+    end
   end
 
 end

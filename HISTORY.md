@@ -1,3 +1,12 @@
+## 0.9.17 (2011-08-09)
+
+* Add aps_retry flag to stop a daemon from looping back after the queue is empty
+* Added daemon class to handle queuing applications. This should be scheduled to run every minute.
+* Added new rake task to clear the APS application queued count.
+* Changed the APS tab view for performance
+* Added created_at attribute to Notification
+* 
+
 ## 0.9.16 (2011-06-02)
 
 * Add previous notification to the failed_aps_write call
