@@ -165,10 +165,10 @@ module Resque
             if c2dm?
               ssl_socket = C2dmSocket.new(self.name, self.cert)
             else
-              socket, ssl_socket = Application.create_sockets(cert || self.cert || File.read(cert_file),
-                                                              certp || cert_passwd,
-                                                              host || Resque.aps_gateway_host,
-                                                              port || Resque.aps_gateway_port)
+              socket, ssl_socket = Application.create_sockets(cert  || self.cert,
+                                                              certp || self.cert_passwd,
+                                                              host  || Resque.aps_gateway_host,
+                                                              port  || Resque.aps_gateway_port)
             end
           rescue
             raise Application.application_exception($!, name)
@@ -188,6 +188,10 @@ module Resque
           end
 
           exc
+        end
+
+        def cert
+          File.read(cert_file)
         end
 
         def c2dm?
