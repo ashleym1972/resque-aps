@@ -1,3 +1,8 @@
+## 0.9.18 (2011-12-20)
+
+* Add C2DM socket so that Android pushes can be sent using the same facility
+* Added OS attribute to Notification and Application
+
 ## 0.9.17 (2011-08-09)
 
 * Add aps_retry flag to stop a daemon from looping back after the queue is empty
@@ -5,7 +10,6 @@
 * Added new rake task to clear the APS application queued count.
 * Changed the APS tab view for performance
 * Added created_at attribute to Notification
-* 
 
 ## 0.9.16 (2011-06-02)
 

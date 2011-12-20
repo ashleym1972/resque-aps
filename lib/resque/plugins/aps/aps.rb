@@ -81,7 +81,7 @@ module Resque
       def enqueue_aps(application_name, notification)
         create_aps_application(application_name, nil, nil) unless aps_application_exists?(application_name)
         redis.rpush(aps_application_queue_key(application_name), encode(notification.to_hash))
-        if inline?
+        if Resque.inline?
           Resque::Plugins::Aps::Application.perform(application_name, false)
         end
         true

@@ -5,7 +5,7 @@ module Resque
         include Resque::Plugins::Aps::Helper
         extend Resque::Plugins::Aps::Helper
 
-        attr_accessor :application_name, :device_token, :payload, :batch_id, :expiry, :created_at
+        attr_accessor :application_name, :device_token, :payload, :batch_id, :expiry, :created_at, :os
 
         def initialize(attributes)
           attributes.each do |k, v|
@@ -16,15 +16,15 @@ module Resque
         end
         
         def inspect
-          "#<#{self.class.name} #{application_name.inspect}, #{device_token.inspect}, #{payload.inspect}>"
+          "#<#{self.class.name} #{application_name.inspect}, #{device_token.inspect}, #{payload.inspect}, #{os.inspect}>"
         end
     
         def to_s
-          "#{device_token.inspect}, #{payload.inspect}"
+          "#{device_token.inspect}, #{payload.inspect}, #{os.inspect}"
         end
     
         def to_hash
-          {:application_name => application_name, :device_token => device_token, :payload => payload}
+          {:application_name => application_name, :device_token => device_token, :payload => payload, :os => os}
         end
 
         # SSL Configuration

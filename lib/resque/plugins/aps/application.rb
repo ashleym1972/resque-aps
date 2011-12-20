@@ -8,9 +8,9 @@ module Resque
         include Resque::Plugins::Aps::Helper
         extend Resque::Plugins::Aps::Helper
 
-        attr_accessor :name, :cert_file, :cert_passwd
+        attr_accessor :name, :cert_file, :cert_passwd, :os
 
-        @queue   = "apple_push_service"
+        @queue   = "a_push_service"
         @@CAFile = nil
 
         def inspect
@@ -61,7 +61,11 @@ module Resque
                 begin
                   n.batch_id = count + 1
                   n.expiry   = Time.now.utc.to_i + 3600
-                  socket.write(n.formatted)
+                  if app.c2dm?
+                    socket.write(n)
+                  else
+                    socket.write(n.formatted)
+                  end
                   app.after_aps_write n
                   count += 1
                   if read_response
@@ -158,10 +162,14 @@ module Resque
           exc = nil
 
           begin
-            socket, ssl_socket = Application.create_sockets(cert || File.read(cert_file),
-                                                            certp || cert_passwd,
-                                                            host || Resque.aps_gateway_host,
-                                                            port || Resque.aps_gateway_port)
+            if c2dm?
+              ssl_socket = C2dmSocket.new(self.name, self.cert)
+            else
+              socket, ssl_socket = Application.create_sockets(cert || self.cert || File.read(cert_file),
+                                                              certp || cert_passwd,
+                                                              host || Resque.aps_gateway_host,
+                                                              port || Resque.aps_gateway_port)
+            end
           rescue
             raise Application.application_exception($!, name)
           end
@@ -180,6 +188,10 @@ module Resque
           end
 
           exc
+        end
+
+        def c2dm?
+          @c2dm ||= os == 'Android'
         end
 
         def to_hash

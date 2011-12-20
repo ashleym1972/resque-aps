@@ -26,6 +26,15 @@ context "Resque::Plugins::Aps::Application" do
     assert_equal 0, Resque.aps_notification_count_for_application('TestApp')
   end
 
+  test "has a good c2dm flag" do
+    a = Resque::Plugins::Aps::Application.new('name' => 'SomeApp', 'cert_file' => '/var/apps/certificates/some_app.pem', 'cert_passwd' => 'hello', 'os' => 'Android')
+    assert a.c2dm?
+    a = Resque::Plugins::Aps::Application.new('name' => 'SomeApp', 'cert_file' => '/var/apps/certificates/some_app.pem', 'cert_passwd' => 'hello')
+    assert !a.c2dm?
+    a = Resque::Plugins::Aps::Application.new('name' => 'SomeApp', 'cert_file' => '/var/apps/certificates/some_app.pem', 'cert_passwd' => 'hello', 'os' => 'iOS')
+    assert !a.c2dm?
+  end
+
   context "ApplicationWithHooks" do
     module Resque::Plugins::Aps
       class Application
